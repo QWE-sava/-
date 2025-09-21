@@ -19,11 +19,7 @@
             <div class="card">
                 <h2>📝 今日の学習を記録</h2>
                 <label for="subject">教科:</label>
-                <select id="subject">
-                    <option value="国語">国語</option>
-                    <option value="数学">数学</option>
-                    <option value="英語">英語</option>
-                </select>
+                <input type="text" id="subject" placeholder="例: 数学, 物理">
                 <label for="hours">時間:</label>
                 <input type="number" id="hours" min="0" step="0.5">
                 <button onclick="addStudyLog()">記録する</button>
@@ -58,11 +54,19 @@
             const data = loadData();
             const studyLog = data.study_log;
 
-            const labels = studyLog.map(log => {
-                const date = new Date(log.date);
-                return `${date.getMonth() + 1}/${date.getDate()}`;
+            // 各教科の合計時間を計算
+            const subjectTotals = {};
+            studyLog.forEach(log => {
+                if (subjectTotals[log.subject]) {
+                    subjectTotals[log.subject] += log.hours;
+                } else {
+                    subjectTotals[log.subject] = log.hours;
+                }
             });
-            const hours = studyLog.map(log => log.hours);
+
+            // グラフ用のデータを作成
+            const labels = Object.keys(subjectTotals);
+            const hours = Object.values(subjectTotals);
 
             const ctx = document.getElementById('studyChart').getContext('2d');
             new Chart(ctx, {
@@ -70,7 +74,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '学習時間 (時間)',
+                        label: '合計学習時間 (時間)',
                         data: hours,
                         backgroundColor: 'rgba(54, 162, 235, 0.6)',
                         borderColor: 'rgba(54, 162, 235, 1)',
@@ -89,11 +93,11 @@
 
         // 学習記録を保存
         function addStudyLog() {
-            const subject = document.getElementById('subject').value;
+            const subject = document.getElementById('subject').value.trim(); // 入力値を空白除去
             const hours = parseFloat(document.getElementById('hours').value);
 
-            if (isNaN(hours) || hours <= 0) {
-                alert('有効な時間を入力してください。');
+            if (subject === '' || isNaN(hours) || hours <= 0) {
+                alert('教科名と有効な時間を入力してください。');
                 return;
             }
 
