@@ -13,6 +13,10 @@
         <div class="content">
             <div class="card">
                 <h2>📊 学習時間グラフ</h2>
+                <div class="chart-controls">
+                    <button id="showSubjectChartBtn">教科別合計</button>
+                    <button id="showDailyChartBtn">日別推移</button>
+                </div>
                 <canvas id="studyChart"></canvas>
             </div>
             
@@ -49,33 +53,56 @@
             localStorage.setItem('studyAppData', JSON.stringify(data));
         }
 
-        // グラフを描画
-        function renderChart() {
+        // グラフのインスタンスを保持する変数
+        let myChart = null;
+
+        // グラフを描画（共通関数）
+        function renderChart(type) {
+            if (myChart) {
+                myChart.destroy(); // 既存のグラフを破棄
+            }
+
             const data = loadData();
             const studyLog = data.study_log;
 
-            // 各教科の合計時間を計算
-            const subjectTotals = {};
-            studyLog.forEach(log => {
-                if (subjectTotals[log.subject]) {
-                    subjectTotals[log.subject] += log.hours;
-                } else {
-                    subjectTotals[log.subject] = log.hours;
-                }
-            });
+            let labels, chartData, chartLabel;
 
-            // グラフ用のデータを作成
-            const labels = Object.keys(subjectTotals);
-            const hours = Object.values(subjectTotals);
+            if (type === 'subject') {
+                const subjectTotals = {};
+                studyLog.forEach(log => {
+                    const subject = log.subject;
+                    if (subjectTotals[subject]) {
+                        subjectTotals[subject] += log.hours;
+                    } else {
+                        subjectTotals[subject] = log.hours;
+                    }
+                });
+                labels = Object.keys(subjectTotals);
+                chartData = Object.values(subjectTotals);
+                chartLabel = '合計学習時間 (時間)';
+            } else { // 'daily'
+                const dailyTotals = {};
+                studyLog.forEach(log => {
+                    const date = new Date(log.date).toLocaleDateString();
+                    if (dailyTotals[date]) {
+                        dailyTotals[date] += log.hours;
+                    } else {
+                        dailyTotals[date] = log.hours;
+                    }
+                });
+                labels = Object.keys(dailyTotals);
+                chartData = Object.values(dailyTotals);
+                chartLabel = '日別学習時間 (時間)';
+            }
 
             const ctx = document.getElementById('studyChart').getContext('2d');
-            new Chart(ctx, {
+            myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: '合計学習時間 (時間)',
-                        data: hours,
+                        label: chartLabel,
+                        data: chartData,
                         backgroundColor: 'rgba(54, 162, 235, 0.6)',
                         borderColor: 'rgba(54, 162, 235, 1)',
                         borderWidth: 1
@@ -93,8 +120,10 @@
 
         // 学習記録を保存
         function addStudyLog() {
-            const subject = document.getElementById('subject').value.trim(); // 入力値を空白除去
-            const hours = parseFloat(document.getElementById('hours').value);
+            const subjectInput = document.getElementById('subject');
+            const hoursInput = document.getElementById('hours');
+            const subject = subjectInput.value.trim();
+            const hours = parseFloat(hoursInput.value);
 
             if (subject === '' || isNaN(hours) || hours <= 0) {
                 alert('教科名と有効な時間を入力してください。');
@@ -110,19 +139,25 @@
             data.study_log.push(newLog);
             saveData(data);
             
-            location.reload(); // ページを再読み込みしてグラフを更新
+            // 入力フォームをクリア
+            subjectInput.value = '';
+            hoursInput.value = '';
+
+            renderChart('subject'); // 記録後、グラフを更新
         }
 
         // タスクを追加
         function addTask() {
-            const taskText = document.getElementById('newTask').value;
+            const newTaskInput = document.getElementById('newTask');
+            const taskText = newTaskInput.value;
             if (taskText.trim() === '') return;
 
             const data = loadData();
             data.tasks.push({ text: taskText, completed: false });
             saveData(data);
             
-            location.reload();
+            newTaskInput.value = ''; // 入力フォームをクリア
+            renderTasks(); // タスクリストを更新
         }
 
         // タスクを表示・更新
@@ -138,9 +173,10 @@
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.checked = task.completed;
-                checkbox.onclick = () => {
+                checkbox.onchange = () => {
                     data.tasks[index].completed = checkbox.checked;
                     saveData(data);
+                    renderTasks();
                 };
                 
                 const textSpan = document.createElement('span');
@@ -149,16 +185,32 @@
                     textSpan.style.textDecoration = 'line-through';
                 }
                 
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '削除';
+                deleteButton.onclick = () => {
+                    data.tasks.splice(index, 1);
+                    saveData(data);
+                    renderTasks();
+                };
+                
                 taskItem.appendChild(checkbox);
                 taskItem.appendChild(textSpan);
+                taskItem.appendChild(deleteButton);
                 taskList.appendChild(taskItem);
             });
         }
 
-        // アプリ起動時にデータを読み込み、グラフとタスクを表示
+        // ページ読み込み時に初期グラフとタスクリストを表示
         window.onload = () => {
-            renderChart();
+            renderChart('subject'); // 初期表示は教科別
             renderTasks();
+
+            document.getElementById('showSubjectChartBtn').addEventListener('click', () => {
+                renderChart('subject');
+            });
+            document.getElementById('showDailyChartBtn').addEventListener('click', () => {
+                renderChart('daily');
+            });
         };
     </script>
 </body>
