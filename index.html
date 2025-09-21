@@ -31,6 +31,9 @@
 
             <div class="card">
                 <h2>✅ 日々のタスク</h2>
+                <div class="task-controls">
+                    <button onclick="clearCompletedTasks()" id="clearCompletedBtn">完了をクリア</button>
+                </div>
                 <div class="task-list" id="taskList"></div>
                 <input type="text" id="newTask" placeholder="新しいタスクを追加">
                 <button onclick="addTask()">追加</button>
@@ -160,6 +163,35 @@
             renderTasks(); // タスクリストを更新
         }
 
+        // タスクを編集
+        function editTask(index) {
+            const data = loadData();
+            const newText = prompt("タスクを編集してください:", data.tasks[index].text);
+            if (newText !== null && newText.trim() !== "") {
+                data.tasks[index].text = newText.trim();
+                saveData(data);
+                renderTasks();
+            }
+        }
+
+        // タスクを削除
+        function deleteTask(index) {
+            if (confirm("本当にこのタスクを削除しますか？")) {
+                const data = loadData();
+                data.tasks.splice(index, 1);
+                saveData(data);
+                renderTasks();
+            }
+        }
+
+        // 完了済みタスクを一括削除
+        function clearCompletedTasks() {
+            const data = loadData();
+            data.tasks = data.tasks.filter(task => !task.completed);
+            saveData(data);
+            renderTasks();
+        }
+
         // タスクを表示・更新
         function renderTasks() {
             const data = loadData();
@@ -185,16 +217,19 @@
                     textSpan.style.textDecoration = 'line-through';
                 }
                 
+                const editButton = document.createElement('button');
+                editButton.className = 'task-btn edit-btn';
+                editButton.textContent = '編集';
+                editButton.onclick = () => editTask(index);
+
                 const deleteButton = document.createElement('button');
+                deleteButton.className = 'task-btn delete-btn';
                 deleteButton.textContent = '削除';
-                deleteButton.onclick = () => {
-                    data.tasks.splice(index, 1);
-                    saveData(data);
-                    renderTasks();
-                };
+                deleteButton.onclick = () => deleteTask(index);
                 
                 taskItem.appendChild(checkbox);
                 taskItem.appendChild(textSpan);
+                taskItem.appendChild(editButton);
                 taskItem.appendChild(deleteButton);
                 taskList.appendChild(taskItem);
             });
