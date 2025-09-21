@@ -23,6 +23,7 @@
             
             <div class="card">
                 <h2>⏰ ポモドーロタイマー</h2>
+                <div id="status-display" class="status-display">勉強時間</div>
                 <div class="timer-container">
                     <div id="timer-display" class="timer-display">25:00</div>
                     <div class="timer-buttons">
@@ -30,6 +31,19 @@
                         <button id="pause-btn" disabled>一時停止</button>
                         <button id="reset-btn">リセット</button>
                     </div>
+                    <div class="timer-settings">
+                        <label>勉強時間 (分):</label>
+                        <input type="number" id="work-minutes" value="25" min="1" max="60">
+                        <label>休憩時間 (分):</label>
+                        <input type="number" id="break-minutes" value="5" min="1" max="30">
+                    </div>
+                    <div class="bgm-control">
+                        <input type="file" id="bgm-upload" accept="audio/*">
+                        <audio id="bgm-player" loop></audio>
+                    </div>
+                </div>
+                <div class="total-study-time">
+                    累計勉強時間: <span id="total-time-display">0</span>分
                 </div>
             </div>
 
@@ -90,7 +104,7 @@
                 labels = Object.keys(subjectTotals);
                 chartData = Object.values(subjectTotals);
                 chartLabel = '合計学習時間 (時間)';
-            } else { // 'daily'
+            } else {
                 const dailyTotals = {};
                 studyLog.forEach(log => {
                     const date = new Date(log.date).toLocaleDateString();
@@ -233,31 +247,101 @@
         }
         
         // === ポモドーロタイマーの新しいコード ===
-        const TIMER_DURATION = 25 * 60; // 25分
-        let timeRemaining = TIMER_DURATION;
         let timerInterval;
+        let isWorkSession = true;
+        let totalStudyTime = 0;
+        let lastTimeUpdate = 0;
 
         const timerDisplay = document.getElementById('timer-display');
+        const statusDisplay = document.getElementById('status-display');
+        const totalTimeDisplay = document.getElementById('total-time-display');
+        const workMinutesInput = document.getElementById('work-minutes');
+        const breakMinutesInput = document.getElementById('break-minutes');
+        const bgmUpload = document.getElementById('bgm-upload');
+        const bgmPlayer = document.getElementById('bgm-player');
+        
         const startBtn = document.getElementById('start-btn');
         const pauseBtn = document.getElementById('pause-btn');
         const resetBtn = document.getElementById('reset-btn');
 
-        function updateDisplay() {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
+        // Cookieの読み書き関数
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function loadTotalStudyTime() {
+            const cookieValue = getCookie('totalStudyTime');
+            if (cookieValue !== null) {
+                totalStudyTime = parseInt(cookieValue) || 0;
+            }
+            totalTimeDisplay.textContent = totalStudyTime;
+        }
+
+        function saveTotalStudyTime() {
+            setCookie('totalStudyTime', totalStudyTime, 365);
+        }
+
+        // タイマーの初期化と表示
+        function getTimerDuration() {
+            return (isWorkSession ? workMinutesInput.value : breakMinutesInput.value) * 60;
+        }
+
+        function updateDisplay(time) {
+            const minutes = Math.floor(time / 60);
+            const seconds = time % 60;
             timerDisplay.textContent = 
                 `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
         function startTimer() {
+            const startTime = Date.now();
+            lastTimeUpdate = startTime;
+
+            // BGMの再生
+            if (isWorkSession && bgmPlayer.src) {
+                bgmPlayer.play();
+            }
+
             timerInterval = setInterval(() => {
-                if (timeRemaining > 0) {
-                    timeRemaining--;
-                    updateDisplay();
-                } else {
+                const now = Date.now();
+                const elapsed = Math.floor((now - lastTimeUpdate) / 1000);
+                lastTimeUpdate = now;
+
+                if (isWorkSession) {
+                    totalStudyTime += elapsed;
+                    totalTimeDisplay.textContent = totalStudyTime;
+                    saveTotalStudyTime();
+                }
+
+                const currentDuration = getTimerDuration();
+                const remainingTime = Math.max(0, currentDuration - (totalStudyTime % currentDuration));
+                updateDisplay(remainingTime);
+
+                if (remainingTime === 0) {
                     clearInterval(timerInterval);
-                    alert("時間になりました！休憩しましょう。");
-                    // 休憩時間に入るロジックをここに追加可能
+                    isWorkSession = !isWorkSession;
+                    bgmPlayer.pause();
+                    bgmPlayer.currentTime = 0;
+                    alert("時間になりました！次のセッションに移ります。");
+                    resetTimer();
+                    startBtn.disabled = false;
                 }
             }, 1000);
             
@@ -267,28 +351,45 @@
 
         function pauseTimer() {
             clearInterval(timerInterval);
+            bgmPlayer.pause();
             startBtn.disabled = false;
             pauseBtn.disabled = true;
         }
 
         function resetTimer() {
             clearInterval(timerInterval);
-            timeRemaining = TIMER_DURATION;
-            updateDisplay();
+            isWorkSession = true;
+            const initialDuration = getTimerDuration();
+            updateDisplay(initialDuration);
+            statusDisplay.textContent = "勉強時間";
+            
+            totalStudyTime = 0;
+            saveTotalStudyTime();
+            totalTimeDisplay.textContent = totalStudyTime;
+
+            bgmPlayer.pause();
+            bgmPlayer.currentTime = 0;
+
             startBtn.disabled = false;
             pauseBtn.disabled = true;
         }
-
-        // イベントリスナーの設定
-        startBtn.addEventListener('click', startTimer);
-        pauseBtn.addEventListener('click', pauseTimer);
-        resetBtn.addEventListener('click', resetTimer);
+        
+        // BGMファイルのアップロード
+        bgmUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const fileURL = URL.createObjectURL(file);
+                bgmPlayer.src = fileURL;
+            }
+        });
 
         // ページ読み込み時の初期化
         window.onload = () => {
             renderChart('subject');
             renderTasks();
-            updateDisplay(); // タイマーの初期表示を更新
+            
+            loadTotalStudyTime();
+            updateDisplay(getTimerDuration());
 
             document.getElementById('showSubjectChartBtn').addEventListener('click', () => {
                 renderChart('subject');
@@ -297,6 +398,11 @@
                 renderChart('daily');
             });
         };
+
+        // イベントリスナーの設定
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
     </script>
 </body>
 </html>
