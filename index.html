@@ -18,6 +18,7 @@
                     <button id="showDailyChartBtn">日別推移</button>
                 </div>
                 <canvas id="studyChart"></canvas>
+                <button onclick="resetStudyLog()" id="resetBtn">学習記録をリセット</button>
             </div>
             
             <div class="card">
@@ -119,6 +120,19 @@
                     }
                 }
             });
+        }
+
+        // 学習記録をリセットする関数
+        function resetStudyLog() {
+            if (confirm("本当に学習記録をリセットしますか？この操作は元に戻せません。")) {
+                const data = loadData();
+                data.study_log = []; // 記録を空にする
+                saveData(data);
+                
+                // グラフを空にして再描画
+                renderChart('subject');
+                alert("学習記録をリセットしました。");
+            }
         }
 
         // 学習記録を保存
