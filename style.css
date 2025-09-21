@@ -55,3 +55,46 @@
 #resetBtn:hover {
     background-color: #ef5350;
 }
+/* ポモドーロタイマー用のスタイル */
+.timer-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.timer-display {
+    font-size: 4rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #4a4a4a;
+}
+
+.timer-buttons button {
+    width: auto;
+    padding: 10px 20px;
+    font-size: 1rem;
+    margin: 0 5px;
+}
+
+.timer-buttons #start-btn {
+    background-color: #4CAF50;
+}
+
+.timer-buttons #start-btn:hover {
+    background-color: #45a049;
+}
+
+.timer-buttons #pause-btn {
+    background-color: #ff9800;
+}
+
+.timer-buttons #pause-btn:hover {
+    background-color: #e68a00;
+}
+
+.timer-buttons #reset-btn {
+    background-color: #f44336;
+}
+
+.timer-buttons #reset-btn:hover {
+    background-color: #d32f2f;
+}
