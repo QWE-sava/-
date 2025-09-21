@@ -1,49 +1,13 @@
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f0f2f5;
-    color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-    padding: 20px;
-}
+/* 省略... 既存のスタイル */
+/* ------------------------------------ */
+/* 追加・調整したスタイル */
 
+/* 全体のコンテナ */
 .container {
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     padding: 30px;
-    width: 100%;
-    max-width: 800px;
 }
 
-h1 {
-    text-align: center;
-    color: #4a4a4a;
-    margin-top: 0;
-}
-
-.content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-}
-
-@media (min-width: 768px) {
-    .content {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-.card {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
+/* カード内の見出し */
 h2 {
     color: #555;
     border-bottom: 2px solid #ddd;
@@ -52,119 +16,18 @@ h2 {
     margin-bottom: 20px;
 }
 
-input[type="number"], input[type="text"], select, button {
-    width: calc(100% - 20px);
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-button {
-    background-color: #5c6bc0;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #3f51b5;
-}
-
-#studyChart {
-    max-width: 100%;
-    height: auto;
-}
-
-.chart-controls {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 15px;
-    gap: 10px;
-}
-
-.chart-controls button {
-    width: auto;
-    padding: 8px 15px;
-}
-
-#resetBtn {
-    width: 100%;
-    margin-top: 15px;
-    background-color: #e57373;
-}
-
-#resetBtn:hover {
-    background-color: #ef5350;
-}
-
-.task-controls {
-    text-align: right;
-    margin-bottom: 10px;
-}
-
-.task-controls button {
-    width: auto;
-    background-color: #f44336;
-    margin: 0;
-}
-
-.task-controls button:hover {
-    background-color: #d32f2f;
-}
-
-.task-list {
-    margin-bottom: 15px;
-}
-
-.task-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #eee;
-}
-
-.task-item span {
-    flex-grow: 1;
-}
-
-.task-item:last-child {
-    border-bottom: none;
-}
-
-.task-item input[type="checkbox"] {
-    width: auto;
-    margin-right: 10px;
-}
-
-.task-btn {
-    width: auto;
-    padding: 5px 10px;
-    margin-left: 5px;
-    font-size: 12px;
-}
-
-.edit-btn {
-    background-color: #2196f3;
-}
-
-.edit-btn:hover {
-    background-color: #1976d2;
-}
-
-.delete-btn {
-    background-color: #f44336;
-}
-
-.delete-btn:hover {
-    background-color: #d32f2f;
-}
-
 /* ポモドーロタイマー用のスタイル */
+.status-display {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #5c6bc0;
+    margin-bottom: 10px;
+}
+
 .timer-container {
     text-align: center;
-    padding: 20px;
+    padding: 20px 0;
 }
 
 .timer-display {
@@ -203,4 +66,59 @@ button:hover {
 
 .timer-buttons #reset-btn:hover {
     background-color: #d32f2f;
+}
+
+.timer-settings {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.timer-settings label, .timer-settings input {
+    width: auto;
+}
+
+.timer-settings input {
+    width: 60px;
+    text-align: center;
+}
+
+.bgm-control {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.total-study-time {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.total-study-time span {
+    color: #5c6bc0;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 767px) {
+    .container {
+        width: 350px;
+        min-width: 350px;
+    }
+
+    body {
+        justify-content: flex-start;
+        align-items: flex-start;
+    }
+
+    .content {
+        display: block;
+    }
+
+    .card {
+        margin-bottom: 20px;
+    }
 }
